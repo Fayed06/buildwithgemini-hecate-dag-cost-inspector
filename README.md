@@ -1,94 +1,110 @@
-# simple-agent
+# ⚡ Hecate DAG Health & BQ Cost Spike Inspector (Alterra DE Ops)
 
-Simple ReAct agent
-Agent generated with `agents-cli` version `1.4.0`
-
-## Project Structure
-
-```
-simple-agent/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic
-│   ├── fast_api_app.py        # FastAPI Backend server
-│   └── app_utils/             # App utilities and helpers
-├── tests/                     # Unit, integration, and load tests
-├── GEMINI.md                  # AI-assisted development guide
-└── pyproject.toml             # Project dependencies
-```
-
-> 💡 **Tip:** Use [Antigravity CLI](https://antigravity.google/) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
-
-## Requirements
-
-Before you begin, ensure you have:
-- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
-- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
-- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
-
-
-## Quick Start
-
-Install `agents-cli` and its skills if not already installed:
-
-```bash
-uvx google-agents-cli setup
-```
-
-Install required packages:
-
-```bash
-agents-cli install
-```
-
-Test the agent with a local web server:
-
-```bash
-agents-cli playground
-```
-
-You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
-
-## Commands
-
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `agents-cli install` | Install dependencies using uv                                                         |
-| `agents-cli playground` | Launch local development environment                                                  |
-| `agents-cli lint`    | Run code quality checks                                                               |
-| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
-| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
-| `agents-cli deploy`  | Deploy agent to Agent Runtime                                                                |
-| `agents-cli publish gemini-enterprise` | Register deployed agent to Gemini Enterprise                    || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
-
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
+An autonomous AI agent on Vertex AI Agent Engine that helps Data Engineers inspect Airflow DAG migration runs (`new-airflow-k8s-dags`), detect shadow DAG anomalies, compute BigQuery query cost differentials ($6.25/TB) and partition-pruning savings, check Apache Airflow security advisories, and generate visual pipeline architecture diagrams.
 
 ---
 
-## Development
+## 🚀 Live Endpoints & Deployments
 
-Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+- **🌐 Live Web UI (Cloud Run)**: [https://hecate-dag-cost-inspector-ui-847354227620.us-east1.run.app](https://hecate-dag-cost-inspector-ui-847354227620.us-east1.run.app)
+- **⚡ Vertex AI Reasoning Engine**: `projects/847354227620/locations/us-east1/reasoningEngines/2379566363367702528`
+- **🧠 Vertex AI Memory Bank**: `agentengine://2379566363367702528`
+- **📦 GCS Asset Storage**: `gs://hecate-dag-cost-inspector-assets-24bcdde3`
+- **🗄️ Firestore Database**: `(default)` in `nam5` (`projects/qwiklabs-gcp-04-66e024bcdde3`)
 
-## Deployment
+---
 
+## 🧪 Testing Guide
+
+This project includes unit, integration, and end-to-end evaluation tests.
+
+### 1. Run All Tests
+Execute the entire test suite using `uv`:
 ```bash
-gcloud config set project <your-project-id>
+uv run pytest tests/unit tests/integration -v
+```
+
+### 2. Run Unit Tests
+```bash
+uv run pytest tests/unit -v
+```
+
+### 3. Run Integration & Stream Tests
+Validates real agent runner streaming and message generation:
+```bash
+uv run pytest tests/integration/test_agent.py -v
+```
+
+### 4. Run Server End-to-End Tests
+Validates local FastAPI and A2A integration:
+```bash
+uv run pytest tests/integration/test_server_e2e.py -v
+```
+
+### 5. Automated Evaluation & Grading
+Evaluate the agent's response quality against defined test datasets:
+```bash
+agents-cli eval
+```
+
+---
+
+## 🛠️ Project Structure
+
+```
+hecate-dag-cost-inspector/
+├── app/
+│   ├── agent.py               # Core ADK agent, tools, code sandbox & memory wiring
+│   ├── fast_api_app.py        # Backend runtime server
+│   └── app_utils/             # Helpers and A2UI utilities
+├── frontend/
+│   ├── main.py                # FastAPI proxy for A2A communication
+│   └── static/
+│       └── index.html         # Custom branded Dark Slate / BQ Amber Chat & A2UI UI
+├── tests/
+│   ├── unit/                  # Unit test suite
+│   ├── integration/           # Integration tests for agent runner and server
+│   └── eval/                  # Quality evaluation datasets and configs
+├── project_brief.md           # Project architecture & UI enhancement roadmap
+├── deployment_metadata.json   # Cloud deployment configuration
+└── pyproject.toml             # Python dependencies (uv)
+```
+
+---
+
+## 💻 Local Development
+
+### Run Local ADK Playground
+```bash
+uv run adk web . --port 8080 --reload_agents --memory_service_uri=agentengine://2379566363367702528
+```
+
+### Run Local Frontend Proxy
+```bash
+cd frontend
+export AGENT_ENGINE_RESOURCE_NAME="projects/847354227620/locations/us-east1/reasoningEngines/2379566363367702528"
+export AGENT_DIRECTORY="app"
+export PORT="8080"
+uv run python main.py
+```
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+---
+
+## 🚢 Cloud Deployment
+
+### Deploy Backend Agent
+```bash
 agents-cli deploy
 ```
 
-To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
-To set up your production infrastructure, run `agents-cli infra cicd`.
-
-## Observability
-
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
-
-## A2A Inspector
-
-This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
-See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.
+### Deploy Frontend to Cloud Run
+```bash
+cd frontend
+gcloud run deploy hecate-dag-cost-inspector-ui \
+  --source=. \
+  --region=us-east1 \
+  --project=qwiklabs-gcp-04-66e024bcdde3 \
+  --allow-unauthenticated \
+  --set-env-vars="AGENT_ENGINE_RESOURCE_NAME=projects/847354227620/locations/us-east1/reasoningEngines/2379566363367702528,AGENT_DIRECTORY=app"
+```
