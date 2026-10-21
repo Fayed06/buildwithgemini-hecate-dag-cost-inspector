@@ -37,6 +37,11 @@
   button:hover { opacity:0.92; }
   button:active { transform:scale(0.98); }
 
+  .prompt-suggestions { display:flex; gap:0.5rem; padding:0.6rem 1.4rem; max-width:860px; width:100%; margin:0 auto; overflow-x:auto; }
+  .prompt-chip { background:rgba(255, 255, 255, 0.06); border:1px solid var(--border); color:#cbd5e1; padding:0.45rem 0.85rem; border-radius:9999px; font-size:0.82rem; cursor:pointer; white-space:nowrap; transition:all 0.2s ease; display:flex; align-items:center; gap:0.35rem; }
+  .prompt-chip:hover { background:rgba(245, 158, 11, 0.15); border-color:var(--highlight); color:#fff; transform:translateY(-1px); }
+  .prompt-chip .chip-icon { color:var(--highlight); font-size:1rem; }
+
   /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
   .a2card { border:1px solid var(--border); border-radius:14px; padding:1.2rem; background:var(--surface); box-shadow:0 4px 12px rgba(0,0,0,0.25); max-width:100%; }
   .a2card + .a2card, .a2col > .a2card { margin-top:.75rem; }
@@ -62,6 +67,17 @@
   <div class="header-badge">Alterra DE</div>
 </header>
 <div id="log"></div>
+<div class="prompt-suggestions">
+  <button type="button" class="prompt-chip" data-prompt="List recent Airflow DAG runs and highlight any with cost anomalies or failures">
+    <span class="chip-icon">🔍</span> Inspect DAG Runs
+  </button>
+  <button type="button" class="prompt-chip" data-prompt="Analyze the BigQuery cost spike on DAG kraken_daily_reconcile_v2 and calculate optimization savings">
+    <span class="chip-icon">💰</span> Calculate BQ Cost Savings
+  </button>
+  <button type="button" class="prompt-chip" data-prompt="Generate a visual pipeline architecture diagram for the Hecate payment reconciliation pipeline">
+    <span class="chip-icon">📊</span> Generate Pipeline Diagram
+  </button>
+</div>
 <form id="form">
   <input id="input" placeholder="Ask about DAG runs, BigQuery query costs, anomalies, or architecture..." autocomplete="off" autofocus>
   <button>Send</button>
@@ -200,19 +216,13 @@ function renderReply(b, parts) {
   log.scrollTop = log.scrollHeight;
 }
 
-// The proxy returns { parts: [{kind:"text",text} | {kind:"a2ui",data}] }.
-form.addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  const text = input.value.trim();
+async function sendMessage(text) {
   if (!text) return;
   bubble("user").textContent = text;
   input.value = "";
   const b = bubble("agent"); b.textContent = "…";
   try {
     const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
-    // Read as text first, then parse. If the proxy ever returns a non-JSON error
-    // page (e.g. a plain "Internal Server Error"), show that body instead of a
-    // cryptic "Unexpected token" JSON error.
     const raw = await res.text();
     let data;
     try { data = JSON.parse(raw); }
@@ -221,6 +231,21 @@ form.addEventListener("submit", async (ev) => {
   } catch (e) {
     b.textContent = "Error: " + e.message;
   }
+}
+
+// Prompt chip clicks
+document.querySelectorAll(".prompt-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const prompt = chip.getAttribute("data-prompt");
+    if (prompt) sendMessage(prompt);
+  });
+});
+
+// The proxy returns { parts: [{kind:"text",text} | {kind:"a2ui",data}] }.
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  sendMessage(text);
 });
 </script>
 </body>
